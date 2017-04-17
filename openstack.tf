@@ -147,6 +147,6 @@ resource "null_resource" "gen-ansible-cfg" {
         template_rendered = "${data.template_file.ansible_cfg.rendered}"
     }
     provisioner "local-exec" {
-        command = "echo '${data.template_file.ansible_cfg.rendered}' > ./inventory"
+        command = "echo '${data.template_file.ansible_cfg.rendered}' > ./ansible.cfg"
     }
 }
