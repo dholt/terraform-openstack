@@ -100,6 +100,7 @@ resource "openstack_compute_instance_v2" "node" {
 output "ip" {
     value = "${openstack_compute_instance_v2.master.network.0.floating_ip}"
 }
+
 data "template_file" "ssh_cfg" {
     template = "${file("${path.module}/templates/ssh.cfg")}"
     vars {
@@ -108,6 +109,11 @@ data "template_file" "ssh_cfg" {
         user_h = "${var.os_head_node_user}"
         user_c = "${var.os_compute_node_user}"
     }
+}
+
+data "template_file" "ansible_cfg" {
+    template = "${file("${path.module}/templates/ansible.cfg")}"
+    vars { }
 }
 
 data "template_file" "inventory" {
@@ -133,5 +139,14 @@ resource "null_resource" "gen-ansible-inventory" {
     }
     provisioner "local-exec" {
         command = "echo '${data.template_file.inventory.rendered}' > ./inventory"
+    }
+}
+
+resource "null_resource" "gen-ansible-cfg" {
+    triggers {
+        template_rendered = "${data.template_file.ansible_cfg.rendered}"
+    }
+    provisioner "local-exec" {
+        command = "echo '${data.template_file.ansible_cfg.rendered}' > ./inventory"
     }
 }
