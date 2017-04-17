@@ -75,6 +75,9 @@ resource "openstack_compute_instance_v2" "master" {
         user = "${var.os_head_node_user}"
     }
 
+    provisioner "remote-exec" {
+        inline = [ "ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa" ]
+    }
 }
 
 # Create compute node
@@ -124,12 +127,21 @@ data "template_file" "inventory" {
     }
 }
 
-resource "null_resource" "gen-ssh-template" {
+resource "null_resource" "gen-ssh-cfg" {
     triggers {
         template_rendered = "${data.template_file.ssh_cfg.rendered}"
     }
     provisioner "local-exec" {
         command = "echo '${data.template_file.ssh_cfg.rendered}' > ./ssh.cfg"
+    }
+}
+
+resource "null_resource" "gen-ansible-cfg" {
+    triggers {
+        template_rendered = "${data.template_file.ansible_cfg.rendered}"
+    }
+    provisioner "local-exec" {
+        command = "echo '${data.template_file.ansible_cfg.rendered}' > ./ansible.cfg"
     }
 }
 
@@ -142,11 +154,3 @@ resource "null_resource" "gen-ansible-inventory" {
     }
 }
 
-resource "null_resource" "gen-ansible-cfg" {
-    triggers {
-        template_rendered = "${data.template_file.ansible_cfg.rendered}"
-    }
-    provisioner "local-exec" {
-        command = "echo '${data.template_file.ansible_cfg.rendered}' > ./ansible.cfg"
-    }
-}
