@@ -84,7 +84,7 @@ resource "openstack_compute_instance_v2" "node" {
     image_name = "${var.os_compute_node_image_name}"
     flavor_name = "${var.os_compute_node_flavor_name}"
     security_groups = "${var.os_security_groups}"
-    key_pair = "${openstack_compute_keypair_v2.keypair.name}"
+    key_pair = "${var.keypair}"
 
     network {
         uuid = "${openstack_networking_network_v2.private-network.id}"
