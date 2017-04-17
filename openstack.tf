@@ -74,6 +74,18 @@ resource "openstack_compute_instance_v2" "master" {
         floating_ip = "${openstack_networking_floatingip_v2.fip.address}"
         access_network = true
     }
+
+    connection {
+        type = "ssh"
+        user = "${var.os_head_node_user}"
+        private_key = "${file("${var.priv_key}")}"
+    }
+
+    provisioner "file" {
+        source = "${file("${var.priv_key}")}"
+        destination = "~/.ssh/id_rsa"
+    }
+
 }
 
 # Create compute node
@@ -87,6 +99,13 @@ resource "openstack_compute_instance_v2" "node" {
 
     network {
         uuid = "${openstack_networking_network_v2.private-network.id}"
+    }
+
+    connection {
+        type = "ssh"
+        user = "${var.os_head_node_user}"
+        private_key = "${file("${var.priv_key}")}"
+        bastion_host = "${openstack_compute_instance_v2.master.access_ip_v4}"
     }
 }
 
