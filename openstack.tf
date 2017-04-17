@@ -11,6 +11,8 @@ variable "dns_nameservers" { type = "list" }
 variable "os_head_node_image_name" { }
 variable "os_compute_node_image_name" { }
 variable "os_head_node_flavor_name" { }
+variable "os_head_node_user" { }
+variable "os_compute_node_user" { }
 variable "os_compute_node_flavor_name" { }
 variable "os_security_groups" { type = "list" }
 variable "compute_instance_count" { }
@@ -103,7 +105,7 @@ resource "openstack_compute_instance_v2" "node" {
 
     connection {
         type = "ssh"
-        user = "${var.os_head_node_user}"
+        user = "${var.os_compute_node_user}"
         private_key = "${file("${var.priv_key}")}"
         bastion_host = "${openstack_compute_instance_v2.master.access_ip_v4}"
     }
