@@ -1,5 +1,5 @@
 variable "project" { }
-variable "keypair" { }
+variable "key" { }
 variable "os_tenant_name" { }
 variable "os_auth_url" { }
 variable "os_domain_name" { }
@@ -56,13 +56,19 @@ resource "openstack_networking_floatingip_v2" "fip" {
     pool = "${var.os_floating_ip_pool}"
 }
 
+# Create Keypair
+resource "openstack_compute_keypair_v2" "keypair" {
+    name = "${var.project}-keypair"
+    public_key = "${file("${var.key}.pub")}"
+}
+
 # Create head node
 resource "openstack_compute_instance_v2" "master" {
     name = "${var.project}"
     image_name = "${var.os_head_node_image_name}"
     flavor_name = "${var.os_head_node_flavor_name}"
     security_groups = "${var.os_security_groups}"
-    key_pair = "${var.keypair}"
+    key_pair = "${openstack_compute_keypair_v2.keypair.name}"
 
     network {
         uuid = "${openstack_networking_network_v2.private-network.id}"
@@ -73,10 +79,18 @@ resource "openstack_compute_instance_v2" "master" {
     connection {
         type = "ssh"
         user = "${var.os_head_node_user}"
+        private_key = "${file("${var.key}")}"
+    }
+
+    provisioner "file" {
+        source = "${var.key}"
+        destination = "~/.ssh/id_rsa"
     }
 
     provisioner "remote-exec" {
-        inline = [ "ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa" ]
+        inline = [
+            "chmod 0600 ~/.ssh/id_rsa",
+        ]
     }
 }
 
@@ -87,7 +101,7 @@ resource "openstack_compute_instance_v2" "node" {
     image_name = "${var.os_compute_node_image_name}"
     flavor_name = "${var.os_compute_node_flavor_name}"
     security_groups = "${var.os_security_groups}"
-    key_pair = "${var.keypair}"
+    key_pair = "${openstack_compute_keypair_v2.keypair.name}"
 
     network {
         uuid = "${openstack_networking_network_v2.private-network.id}"
@@ -96,6 +110,7 @@ resource "openstack_compute_instance_v2" "node" {
     connection {
         type = "ssh"
         user = "${var.os_compute_node_user}"
+        private_key = "${file("${var.key}")}"
         bastion_host = "${openstack_compute_instance_v2.master.access_ip_v4}"
     }
 }
@@ -111,6 +126,7 @@ data "template_file" "ssh_cfg" {
         cidr = "${var.cidr}"
         user_h = "${var.os_head_node_user}"
         user_c = "${var.os_compute_node_user}"
+        ssh_key = "${var.key}"
     }
 }
 
