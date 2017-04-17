@@ -1,5 +1,6 @@
 variable "project" { }
-variable "keypair" { }
+variable "priv_key" { default = "~/.ssh/id_rsa" }
+variable "pub_key" { default = "~/.ssh/id_rsa.pub" }
 variable "os_tenant_name" { }
 variable "os_auth_url" { }
 variable "os_domain_name" { }
@@ -54,13 +55,19 @@ resource "openstack_networking_floatingip_v2" "fip" {
     pool = "${var.os_floating_ip_pool}"
 }
 
+# Create Keypair
+resource "openstack_compute_keypair_v2" "keypair" {
+    name = "${var.project}-keypair"
+    public_key = "${file("${var.pub_key}")}"
+}
+
 # Create head node
 resource "openstack_compute_instance_v2" "master" {
     name = "${var.project}"
     image_name = "${var.os_head_node_image_name}"
     flavor_name = "${var.os_head_node_flavor_name}"
     security_groups = "${var.os_security_groups}"
-    key_pair = "${var.keypair}"
+    key_pair = "${openstack_compute_keypair_v2.keypair.name}"
 
     network {
         uuid = "${openstack_networking_network_v2.private-network.id}"
@@ -76,7 +83,7 @@ resource "openstack_compute_instance_v2" "node" {
     image_name = "${var.os_compute_node_image_name}"
     flavor_name = "${var.os_compute_node_flavor_name}"
     security_groups = "${var.os_security_groups}"
-    key_pair = "${var.keypair}"
+    key_pair = "${openstack_compute_keypair_v2.keypair.name}"
 
     network {
         uuid = "${openstack_networking_network_v2.private-network.id}"
