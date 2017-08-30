@@ -80,10 +80,15 @@ resource "openstack_compute_instance_v2" "master" {
         uuid = "${openstack_networking_network_v2.private-network.id}"
         access_network = true
     }
+}
 
+# Provision head node
+resource "null_resource" "provision_master" {
+    depends_on = ["openstack_compute_floatingip_associate_v2.fip"]
     connection {
         type = "ssh"
         user = "${var.os_head_node_user}"
+        host = "${openstack_networking_floatingip_v2.fip.address}"
         private_key = "${file("${var.key}")}"
     }
 
