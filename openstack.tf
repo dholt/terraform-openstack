@@ -78,7 +78,6 @@ resource "openstack_compute_instance_v2" "master" {
 
     network {
         uuid = "${openstack_networking_network_v2.private-network.id}"
-        floating_ip = "${openstack_networking_floatingip_v2.fip.address}"
         access_network = true
     }
 
