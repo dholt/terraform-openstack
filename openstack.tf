@@ -56,6 +56,12 @@ resource "openstack_networking_floatingip_v2" "fip" {
     pool = "${var.os_floating_ip_pool}"
 }
 
+# Associate floating IP with head node
+resource "openstack_compute_floatingip_associate_v2" "fip" {
+    floating_ip = "${openstack_networking_floatingip_v2.fip.address"
+    instance_id = "${openstack_compute_instance_v2.master.id}"
+}
+
 # Create Keypair
 resource "openstack_compute_keypair_v2" "keypair" {
     name = "${var.project}-keypair"
@@ -116,13 +122,13 @@ resource "openstack_compute_instance_v2" "node" {
 }
 
 output "ip" {
-    value = "${openstack_compute_instance_v2.master.network.0.floating_ip}"
+    value = "${openstack_networking_floatingip_v2.fip.address}"
 }
 
 data "template_file" "ssh_cfg" {
     template = "${file("${path.module}/templates/ssh.cfg")}"
     vars {
-        master_ip = "${openstack_compute_instance_v2.master.network.0.floating_ip}"
+        master_ip = "${openstack_networking_floatingip_v2.fip.address}"
         cidr = "${var.cidr}"
         user_h = "${var.os_head_node_user}"
         user_c = "${var.os_compute_node_user}"
@@ -138,7 +144,7 @@ data "template_file" "ansible_cfg" {
 data "template_file" "inventory" {
     template = "${file("${path.module}/templates/inventory")}"
     vars {
-        head = "${openstack_compute_instance_v2.master.network.0.floating_ip}"
+        head = "${openstack_networking_floatingip_v2.fip.address}"
         nodes = "${join("\n",openstack_compute_instance_v2.node.*.network.0.fixed_ip_v4)}"
     }
 }
