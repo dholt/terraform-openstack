@@ -164,8 +164,8 @@ data "template_file" "ansible_cfg" {
 data "template_file" "inventory" {
     template = "${file("${path.module}/templates/inventory")}"
     vars {
-        head = "${openstack_networking_floatingip_v2.fip.address}"
-        nodes = "${join("\n",openstack_compute_instance_v2.node.*.network.0.fixed_ip_v4)}"
+        head = "${openstack_compute_instance_v2.master.name}"
+        nodes = "${join("\n",openstack_compute_instance_v2.node.*.name)}"
     }
 }
 
