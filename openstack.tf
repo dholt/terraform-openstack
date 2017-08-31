@@ -108,7 +108,7 @@ resource "null_resource" "provision_master" {
 # Create compute node
 resource "openstack_compute_instance_v2" "node" {
     count = "${var.compute_instance_count}"
-    name = "${var.project}${count.index+1}"
+    name = "${var.project}-${count.index+1}"
     image_name = "${var.os_compute_node_image_name}"
     flavor_name = "${var.os_compute_node_flavor_name}"
     security_groups = "${var.os_security_groups}"
@@ -138,6 +138,8 @@ data "template_file" "ssh_cfg" {
         user_h = "${var.os_head_node_user}"
         user_c = "${var.os_compute_node_user}"
         ssh_key = "${var.key}"
+        master_hostname = "${openstack_compute_instance_v2.master.name}"
+        clients = "${format("Host %s\n  HostName %s\n  User %s\n  ProxyCommand ssh -l %s -W %%h:%%p %s", openstack_compute_instance_v2.node.*.name, openstack_compute_instance_v2.node.*.network.0.fixed_ip_v4, var.os_compute_node_user, var.os_compute_node_user, openstack_networking_floatingip_v2.fip.address)}"
     }
 }
 
