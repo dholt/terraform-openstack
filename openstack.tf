@@ -130,6 +130,19 @@ output "ip" {
     value = "${openstack_networking_floatingip_v2.fip.address}"
 }
 
+# Create intermediate templates for each client ssh config
+data "template_file" "ssh_client_spec" {
+    count = "${var.compute_instance_count}"
+    template = "Host $${hostname}\n  HostName $${host_ip}\n  User $${user}\n  ProxyCommand ssh -l $${user} -W %h:%p $${master_ip}"
+
+    vars {
+        hostname = "${element(openstack_compute_instance_v2.node.*.name, count.index)}"
+        host_ip = "${element(openstack_compute_instance_v2.node.*.access_ip_v4, count.index)}"
+        user = "${var.os_compute_node_user}"
+        master_ip = "${openstack_networking_floatingip_v2.fip.address}"
+    }
+}
+
 data "template_file" "ssh_cfg" {
     template = "${file("${path.module}/templates/ssh.cfg")}"
     vars {
@@ -139,7 +152,7 @@ data "template_file" "ssh_cfg" {
         user_c = "${var.os_compute_node_user}"
         ssh_key = "${var.key}"
         master_hostname = "${openstack_compute_instance_v2.master.name}"
-        clients = "${format("Host %s\n  HostName %s\n  User %s\n  ProxyCommand ssh -l %s -W %%h:%%p %s", openstack_compute_instance_v2.node.*.name, openstack_compute_instance_v2.node.*.network.0.fixed_ip_v4, var.os_compute_node_user, var.os_compute_node_user, openstack_networking_floatingip_v2.fip.address)}"
+        clients = "${join("\n", data.template_file.ssh_client_spec.*.rendered)}"
     }
 }
 
