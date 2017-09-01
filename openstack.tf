@@ -21,6 +21,8 @@ provider "openstack" {
     tenant_name = "${var.os_tenant_name}"
     auth_url = "${var.os_auth_url}"
     domain_name = "${var.os_domain_name}"
+    user_name = "${var.os_username}"
+    password = "${var.os_password}"
 }
 
 # Create private network
