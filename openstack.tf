@@ -137,7 +137,7 @@ output "ip" {
 # Create intermediate templates for each client ssh config
 data "template_file" "ssh_client_spec" {
     count = "${var.compute_instance_count}"
-    template = "Host $${hostname}\n  HostName $${host_ip}\n  User $${user}\n  ProxyCommand ssh -l $${user} -W %h:%p $${master_ip}"
+    template = "Host $${hostname} $${host_ip}\n  HostName $${host_ip}\n  User $${user}\n  ProxyCommand ssh -l $${user} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p $${master_ip}"
 
     vars {
         hostname = "${element(openstack_compute_instance_v2.node.*.name, count.index)}"
