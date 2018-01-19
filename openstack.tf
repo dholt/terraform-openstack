@@ -94,7 +94,8 @@ resource "null_resource" "provision_master" {
         type = "ssh"
         user = "${var.os_head_node_user}"
         host = "${openstack_networking_floatingip_v2.fip.address}"
-        private_key = "${file("${var.key}")}"
+        #private_key = "${file("${var.key}")}"
+        agent = "true"
     }
 
     provisioner "file" {
@@ -125,8 +126,9 @@ resource "openstack_compute_instance_v2" "node" {
     connection {
         type = "ssh"
         user = "${var.os_compute_node_user}"
-        private_key = "${file("${var.key}")}"
+        #private_key = "${file("${var.key}")}"
         bastion_host = "${openstack_compute_instance_v2.master.access_ip_v4}"
+        agent = "true"
     }
 }
 
