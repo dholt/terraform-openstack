@@ -198,7 +198,7 @@ resource "null_resource" "gen-ansible-inventory" {
         template_rendered = "${data.template_file.inventory.rendered}"
     }
     provisioner "local-exec" {
-        command = "echo '${data.template_file.inventory.rendered}' > ./inventory"
+        command = "echo '${data.template_file.inventory.rendered}' > ./inventory/terraform"
     }
 }
 
